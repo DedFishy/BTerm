@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>BTerm</title>
+
+  <style>
+  body {
+    font-family: Consolas, monospace;
+    background-color: rgb(2, 2, 2);
+    overflow: hidden;
+  }
+  h1 {
+    font-size: 0.9em;
+    padding: 0;
+    margin: 0;
+    cursor: default;
+  }
+  .terminal {
+    color: rgb(0, 255, 0);
+  }
+  .textedit {
+    display: none;
+    width: 100%;
+    height: 95vh;
+    position: fixed;
+    overflow: hidden;
+    appearance: none;
+    background-color: inherit;
+    color: rgb(0, 255, 0);
+    border: none;
+    outline: none !important;
+    resize: none;
+    cursor: default;
+  }
+  .inputtext {
+    color: rgb(0, 255, 0);
+  }
+  .input {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  .inputbox {
+    background-color: inherit;
+    border-style: none;
+    color: rgb(0, 255, 0);
+    outline: 0 !important;
+    padding: 0;
+    margin: 0;
+    font-family: Consolas, monospace;
+    font-size: inherit;
+    font-weight: inherit;
+    font-stretch: inherit;
+    line-height: inherit;
+    display: block;
+    width: 100%;
+    cursor: default;
+  }
+  .inputboxcontainer {
+    width: 100%;
+    flex-grow: 1;
+  }
+  </style>
+
+  <script type="text/javascript">
+  var waitingForEnter = false;
+  var editorReturn = ""
+  var view = "terminal";
+  var date = new Date();
+var config = {
+  version: "0.1b"
+};
+  function loadpage() {
+    console.log("Loading page...");
+    var terminal = document.getElementById("terminal");
+    var inputbox = document.getElementById("inputbox");
+    var inputtext = document.getElementById("inputtext");
+    var textedit= document.getElementById("textedit");
+    document.addEventListener("click", function(event) {
+      selectbox();
+    });
+    selectbox();
+    console.log("All loading processes complete.");
+  };
+  function waitforesc() {
+    return new Promise((resolve) => {
+      document.addEventListener('keydown', onKeyHandler);
+      function onKeyHandler(e) {
+        if (e.key == "Escape") {
+          document.removeEventListener('keydown', onKeyHandler);
+          resolve();
+        }
+      }
+    });
+  }
+   //command functions
+  function clear(cmd) {
+    terminal.innerHTML = "";
+  };
+  //HAHAHAHAHAHAHAHAHAHAHAHAHA
+  function exit(cmd) {
+    document.body.style.backgroundColor = "white";
+    document.body.style.overflow = "visible";
+    terminal.style.display = "none";
+    inputbox.style.display = "none";
+    inputtext.style.display = "none";
+  };
+  function google(cmd) {
+    window.location.href = "https://google.com";
+  };
+function about(cmd) {
+  return "BTerm " + config.version + "<br>created by B Software<br>This software is licensed under the BSW Standard License";
+};
+  function newline(cmd) {
+    console.log("Nothing happened...");
+    return "";
+  };
+  function help(cmd) {
+    var help = "BTerm Commands:"
+    for (command in commands) {
+      if (command != "") {
+      help += "<br>" + command;
+    };
+    };
+    return help;
+  };
+  function readfile(cmd) {
+    console.log("Searching for " + cmd[0]);
+    if (cmd[0] in fs) {
+      return fs[cmd];
+    }
+    else {
+      return "File not found";
+    };
+  };
+
+function directory(cmd) {
+  files = ""
+  for (file in fs) {
+    files += file + "<br>";
+  };
+  return files;
+  };
+  function echo(cmd) {
+    if (typeof(cmd) == "object") {
+      return cmd.join(" ");
+    }
+    else {
+      return cmd;
+    };
+  };
+  function makefile(cmd) {
+    if (cmd.length > 0) {
+      var hours = (date.getHours()%12);
+      if (hours == 0) {
+        hours = 12;
+      };
+      fs[cmd[0]] = "File created at " + hours + ":" + date.getMinutes() + ":" + date.getSeconds() + " on " + (date.getMonth() + 1) + "/" + date.getDate() + "/" + date.getYear();
+    };
+  };
+  var commands = {
+    "clear": clear,
+    "cls": clear,
+    "help": help,
+    "about": about,
+    "": newline,
+    "echo": echo,
+    "exit": exit,
+    "google": google,
+    "read": readfile,
+    "dir": directory,
+    "ls": directory,
+  };
+  var fs = {
+    "readme.txt": "Welcome to BTerm, the latest in terminal software!<br>BTerm is powered by the 1Folder filesystem, so all of your files are in the same folder! How annoying!"
+  }
+
+document.addEventListener("keyup", function(event) {
+  if (event.code === "Enter" && view == "terminal") {
+    runcommand();
+    window.location.href = "#inputbox";
+    console.log("Command submitted.");
+  };
+
+});
+
+function runcommand() {
+  console.log("Invoking command...");
+  var command = inputbox.value;
+  if (terminal.innerHTML.endsWith("<br>")) {
+    terminal.innerHTML += inputtext.innerHTML + command;
+  }
+  else if (terminal.innerHTML == "") {
+    terminal.innerHTML += inputtext.innerHTML + command;
+  }
+  else {
+    terminal.innerHTML += "<br>" + inputtext.innerHTML + command;
+  };
+  inputbox.value = "";
+  command = command.split(" ");
+  if (command[0] in commands) {
+    var output = commands[command[0]](command.slice(1));
+    if (typeof(output) == "undefined") {
+      output = "";
+    }
+    else {
+      output = "<br>" + output;
+    };
+    terminal.innerHTML += output;
+    console.log("Command invoked.");
+}
+  else {
+    terminal.innerHTML += "<br>Command not found.";
+    console.log("Command not found.");
+};
+};
+
+  function selectbox() {
+    if (view == "terminal") {
+    inputbox.focus();
+    console.log("Box selected.");
+  };
+  };
+  window.onload = loadpage;
+  </script>
+</head>
+
+<body>
+  <div class="window">
+    <h1 class="terminal" id="terminal">BTerm
+
+      <br>Use "help" for a list of commands or "about" for info on BTerm</h1>
+    <h1><textarea id="textedit" class="textedit" spellcheck="false"></textarea></h1>
+    <div class="input">
+      <h1 class="inputtext" id="inputtext">Term></h1><h1 class="inputboxcontainer"><input type="text" spellcheck="false" class="inputbox" id="inputbox"></input></h1>
+    </div>
+  </div>
+</body>
+
+</html>
